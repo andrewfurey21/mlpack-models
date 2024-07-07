@@ -9,17 +9,22 @@ template<typename MatType = arma::mat>
 class YoloV3TinyLoss
 {
  public:
-  YoloV3TinyLoss();
+  YoloV3TinyLoss() {}
+
+  // L(YOLO) = a1 * L(confidence) + a2 * L(localization) + a3 * L(classification)
+  // L(confidence) = binary cross entropy
+  // L(localization) = rmse
+  // L(classification) = multi class cross entropy
 
   typename MatType::elem_type Forward(const MatType& prediction,
-                                      const MatType& target);
+                                      const MatType& target) {}
 
   void Backward(const MatType& prediction,
                 const MatType& target,
-                MatType& loss);
+                MatType& loss) {}
 
   template<typename Archive>
-  void serialize(Archive& ar, const uint32_t /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */) {}
 
  private:
 };

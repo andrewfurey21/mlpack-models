@@ -5,6 +5,7 @@
 #include <mlpack/methods/ann/layer/add.hpp>
 #include <mlpack/methods/ann/layer/batch_norm.hpp>
 #include <mlpack/methods/ann/layer/convolution.hpp>
+#include <mlpack/methods/ann/layer/identity.hpp>
 #include <mlpack/methods/ann/layer/leaky_relu.hpp>
 #include <mlpack/methods/ann/layer/max_pooling.hpp>
 #include <mlpack/methods/ann/layer/multi_layer.hpp>
@@ -32,50 +33,46 @@ public:
 	inputChannels(inputChannels),
 	numClasses(numClasses)
   {
-    AddConvolutionalBlock(3, 16);
-    // AddPoolingBlock(2, 2);
-    // AddConvolutionalBlock(3, 32);
-    // AddPoolingBlock(2, 2);
-    // AddConvolutionalBlock(3, 64);
-    // AddPoolingBlock(2, 2);
-    // AddConvolutionalBlock(3, 128);
-    // AddPoolingBlock(2, 2);
-    // AddConvolutionalBlock(3, 256);//save
-    // AddPoolingBlock(2, 2);
-    // AddConvolutionalBlock(3, 512);
-    // AddPoolingBlock(2, 2);
-    // AddConvolutionalBlock(3, 1024);
-    // AddConvolutionalBlock(1, 256);//save
-    // AddConvolutionalBlock(3, 512);
-    // AddConvolutionalBlock(1, 255);
-    // model.Add(mlpack::YoloLayer<arma::mat>);
-
+    model.Add(ConvolutionalBlock(3, 16));//0
+    model.Add(PoolingBlock(2, 2));//1
+    //model.Add(ConvolutionalBlock(3, 32));//2
   }
+
 
   ~YoloV3Tiny() {}
 
+  FFN<YoloV3TinyLoss<>, RandomInitialization>& Model() { return model; }
+
 private:
-  Layer<MatType>* AddPoolingBlock(const size_t kernel, const size_t stride) {
-    return new MaxPooling(kernel, kernel, stride, stride);
+  Layer<MatType>* PoolingBlock(const size_t kernel, const size_t stride) {
+    MultiLayer<MatType>* poolingBlock = new MultiLayer<MatType>();
+    poolingBlock->template Add<MaxPooling>(kernel, kernel, stride, stride);
+    return poolingBlock;
   }
 
-  Layer<MatType>* AddConvolutionalBlock(const size_t kernelSize,
+  Layer<MatType>* ConvolutionalBlock(const size_t kernelSize,
 			     const size_t filters,
 			     const size_t stride = 1,
 			     const size_t padding = 1,
 			     const bool batchNorm = true,
 			     const bool activate = true) {
     MultiLayer<MatType>* convBlock = new MultiLayer<MatType>();
-    convBlock->Add(Convolution(filters, kernelSize, kernelSize, stride, stride, padding, padding, "none", false));
+    convBlock->template Add<Convolution>(filters, kernelSize, kernelSize, stride, stride, padding, padding, "none", false);
     if (batchNorm) {
-      convBlock->Add(BatchNorm());
+      convBlock->template Add<BatchNorm>();
     }
-    // TODO: bias
+    // // TODO: bias
     if (activate) {
-      convBlock->Add(LeakyReLU(0.1));
+      convBlock->template Add<LeakyReLU>(0.1f);
     }
     return convBlock;
   }
+
+  Layer<MatType>* UpsampleBlock() {}
+
+  Layer<MatType>* RouteBlock() {}
+
+  Layer<MatType>* YOLOBlock(const std::vector<size_t> mask) {}
 
   FFN<YoloV3TinyLoss<MatType>, RandomInitialization> model;
 

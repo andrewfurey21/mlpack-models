@@ -33,46 +33,48 @@ public:
 	numClasses(numClasses)
   {
     AddConvolutionalBlock(3, 16);
-    AddPoolingBlock(2, 2);
-    AddConvolutionalBlock(3, 32);
-    AddPoolingBlock(2, 2);
-    AddConvolutionalBlock(3, 64);
-    AddPoolingBlock(2, 2);
-    AddConvolutionalBlock(3, 128);
-    AddPoolingBlock(2, 2);
-    AddConvolutionalBlock(3, 256);//save
-    AddPoolingBlock(2, 2);
-    AddConvolutionalBlock(3, 512);
-    AddPoolingBlock(2, 2);
-    AddConvolutionalBlock(3, 1024);
-    AddConvolutionalBlock(1, 256);//save
-    AddConvolutionalBlock(3, 512);
-    AddConvolutionalBlock(1, 255);
-    model.Add(mlpack::YoloLayer<arma::mat>);
+    // AddPoolingBlock(2, 2);
+    // AddConvolutionalBlock(3, 32);
+    // AddPoolingBlock(2, 2);
+    // AddConvolutionalBlock(3, 64);
+    // AddPoolingBlock(2, 2);
+    // AddConvolutionalBlock(3, 128);
+    // AddPoolingBlock(2, 2);
+    // AddConvolutionalBlock(3, 256);//save
+    // AddPoolingBlock(2, 2);
+    // AddConvolutionalBlock(3, 512);
+    // AddPoolingBlock(2, 2);
+    // AddConvolutionalBlock(3, 1024);
+    // AddConvolutionalBlock(1, 256);//save
+    // AddConvolutionalBlock(3, 512);
+    // AddConvolutionalBlock(1, 255);
+    // model.Add(mlpack::YoloLayer<arma::mat>);
 
   }
 
   ~YoloV3Tiny() {}
 
 private:
-  void AddPoolingBlock(const size_t kernel, const size_t stride) {
-    model.Add(MaxPooling(kernel, kernel, stride, stride));
+  Layer<MatType>* AddPoolingBlock(const size_t kernel, const size_t stride) {
+    return new MaxPooling(kernel, kernel, stride, stride);
   }
 
-  void AddConvolutionalBlock(const size_t kernelSize,
+  Layer<MatType>* AddConvolutionalBlock(const size_t kernelSize,
 			     const size_t filters,
 			     const size_t stride = 1,
 			     const size_t padding = 1,
 			     const bool batchNorm = true,
 			     const bool activate = true) {
-    model.Add(Convolution(filters, kernelSize, kernelSize, stride, stride, padding, padding, "none", false));
+    MultiLayer<MatType>* convBlock = new MultiLayer<MatType>();
+    convBlock->Add(Convolution(filters, kernelSize, kernelSize, stride, stride, padding, padding, "none", false));
     if (batchNorm) {
-      model.Add(BatchNorm());
+      convBlock->Add(BatchNorm());
     }
-    model.Add(Add());//biases
+    // TODO: bias
     if (activate) {
-      model.Add(LeakyReLU(0.1));
+      convBlock->Add(LeakyReLU(0.1));
     }
+    return convBlock;
   }
 
   FFN<YoloV3TinyLoss<MatType>, RandomInitialization> model;

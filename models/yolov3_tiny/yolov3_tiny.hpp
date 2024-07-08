@@ -5,10 +5,10 @@
 #include <mlpack/methods/ann/layer/add.hpp>
 #include <mlpack/methods/ann/layer/batch_norm.hpp>
 #include <mlpack/methods/ann/layer/convolution.hpp>
-#include <mlpack/methods/ann/layer/identity.hpp>
 #include <mlpack/methods/ann/layer/leaky_relu.hpp>
 #include <mlpack/methods/ann/layer/max_pooling.hpp>
 #include <mlpack/methods/ann/layer/multi_layer.hpp>
+#include <mlpack/methods/ann/layer/padding.hpp>
 
 #include "yolov3_tiny_loss.hpp"
 #include "yolov3_tiny_layer.hpp"
@@ -33,9 +33,31 @@ public:
 	inputChannels(inputChannels),
 	numClasses(numClasses)
   {
-    model.Add(ConvolutionalBlock(3, 16));//0
-    model.Add(PoolingBlock(2, 2));//1
-    //model.Add(ConvolutionalBlock(3, 32));//2
+    layers.resize(24);
+    layers[0] = ConvolutionalBlock(3, 16);
+    layers[1] = PoolingBlock(2, 2);
+    layers[2] = ConvolutionalBlock(3, 32);
+    layers[3] = PoolingBlock(2, 2);
+    layers[4] = ConvolutionalBlock(3, 64);
+    layers[5] = PoolingBlock(2, 2);
+    layers[6] = ConvolutionalBlock(3, 128);
+    layers[7] = PoolingBlock(2, 2);
+    layers[8] = ConvolutionalBlock(3, 256);
+    layers[9] = PoolingBlock(2, 2);
+    layers[10]= ConvolutionalBlock(3, 512);
+    layers[11]= PoolingBlock(2, 1, 0.5, 0.5);
+    layers[12]= ConvolutionalBlock(3, 1024);
+    layers[13]= ConvolutionalBlock(3, 256);
+    layers[14]= ConvolutionalBlock(3, 512);
+    layers[15]= ConvolutionalBlock(3, 255, 1, 0, false, false);
+    layers[16]= YOLOv3Block({3, 4, 5});
+    layers[17]= RouteBlock(13);
+    layers[18]= ConvolutionalBlock(1, 128);
+    layers[19]= UpsampleBlock(2);
+    layers[20]= RouteBlock(19, 8);
+    layers[21]= ConvolutionalBlock(3, 256);
+    layers[21]= ConvolutionalBlock(3, 255);
+    layers[23]= YOLOv3Block({0, 1, 2});
   }
 
 
@@ -44,8 +66,9 @@ public:
   FFN<YoloV3TinyLoss<>, RandomInitialization>& Model() { return model; }
 
 private:
-  Layer<MatType>* PoolingBlock(const size_t kernel, const size_t stride) {
+  Layer<MatType>* PoolingBlock(const size_t kernel, const size_t stride, const double paddingW=0, const double paddingH=0) {
     MultiLayer<MatType>* poolingBlock = new MultiLayer<MatType>();
+    poolingBlock->template Add<Padding>(std::ceil(paddingW), std::floor(paddingW), std::ceil(paddingH), std::floor(paddingH));
     poolingBlock->template Add<MaxPooling>(kernel, kernel, stride, stride);
     return poolingBlock;
   }
@@ -68,11 +91,11 @@ private:
     return convBlock;
   }
 
-  Layer<MatType>* UpsampleBlock() {}
+  Layer<MatType>* UpsampleBlock(const size_t scaleFactor) {}
 
   Layer<MatType>* RouteBlock() {}
 
-  Layer<MatType>* YOLOBlock(const std::vector<size_t> mask) {}
+  Layer<MatType>* YOLOv3Block(const std::vector<size_t> mask) {}
 
   FFN<YoloV3TinyLoss<MatType>, RandomInitialization> model;
 
@@ -82,6 +105,8 @@ private:
   size_t numClasses;
 
   std::vector<double> anchors;
+
+  std::vector<Layer<MatType>*> layers;
 };
 
 } // namespace models

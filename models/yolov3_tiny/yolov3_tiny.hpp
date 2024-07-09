@@ -28,12 +28,13 @@ public:
 	     const size_t inputChannels = 3,
 	     const size_t numClasses = 80
 	     ) :
+	anchors(anchors),
 	inputWidth(inputWidth),
 	inputHeight(inputHeight),
 	inputChannels(inputChannels),
 	numClasses(numClasses)
   {
-    layers.resize(24);
+    layers.resize(17);
     layers[0] = ConvolutionalBlock(3, 16);
     layers[1] = PoolingBlock(2, 2);
     layers[2] = ConvolutionalBlock(3, 32);
@@ -47,17 +48,21 @@ public:
     layers[10]= ConvolutionalBlock(3, 512);
     layers[11]= PoolingBlock(2, 1, 0.5, 0.5);
     layers[12]= ConvolutionalBlock(3, 1024);
-    layers[13]= ConvolutionalBlock(3, 256);
+    layers[13]= ConvolutionalBlock(1, 256, 1, 0);
     layers[14]= ConvolutionalBlock(3, 512);
-    layers[15]= ConvolutionalBlock(3, 255, 1, 0, false, false);
+    layers[15]= ConvolutionalBlock(1, 255, 1, 0, false, false);
     layers[16]= YOLOv3Block({3, 4, 5});
-    layers[17]= RouteBlock(13);
-    layers[18]= ConvolutionalBlock(1, 128);
-    layers[19]= UpsampleBlock(2);
-    layers[20]= RouteBlock(19, 8);
-    layers[21]= ConvolutionalBlock(3, 256);
-    layers[21]= ConvolutionalBlock(3, 255);
-    layers[23]= YOLOv3Block({0, 1, 2});
+
+    for (auto layer : layers) {
+      model.template Add(layer);
+    }
+    //layers[17]= RouteBlock(13);
+    //layers[18]= ConvolutionalBlock(1, 128);
+    //layers[19]= UpsampleBlock(2);
+    //layers[20]= RouteBlock(19, 8);
+    //layers[21]= ConvolutionalBlock(3, 256);
+    //layers[21]= ConvolutionalBlock(3, 255);
+    //layers[23]= YOLOv3Block({0, 1, 2});
   }
 
 
@@ -68,7 +73,8 @@ public:
 private:
   Layer<MatType>* PoolingBlock(const size_t kernel, const size_t stride, const double paddingW=0, const double paddingH=0) {
     MultiLayer<MatType>* poolingBlock = new MultiLayer<MatType>();
-    poolingBlock->template Add<Padding>(std::ceil(paddingW), std::floor(paddingW), std::ceil(paddingH), std::floor(paddingH));
+    if (paddingW || paddingH)
+      poolingBlock->template Add<Padding>(std::ceil(paddingW), std::floor(paddingW), std::ceil(paddingH), std::floor(paddingH));
     poolingBlock->template Add<MaxPooling>(kernel, kernel, stride, stride);
     return poolingBlock;
   }
@@ -80,11 +86,10 @@ private:
 			     const bool batchNorm = true,
 			     const bool activate = true) {
     MultiLayer<MatType>* convBlock = new MultiLayer<MatType>();
-    convBlock->template Add<Convolution>(filters, kernelSize, kernelSize, stride, stride, padding, padding, "none", false);
+    convBlock->template Add<Convolution>(filters, kernelSize, kernelSize, stride, stride, padding, padding, "none", !batchNorm);
     if (batchNorm) {
       convBlock->template Add<BatchNorm>();
     }
-    // // TODO: bias
     if (activate) {
       convBlock->template Add<LeakyReLU>(0.1f);
     }
@@ -95,7 +100,9 @@ private:
 
   Layer<MatType>* RouteBlock() {}
 
-  Layer<MatType>* YOLOv3Block(const std::vector<size_t> mask) {}
+  Layer<MatType>* YOLOv3Block(const std::vector<size_t> mask) {
+    return new mlpack::YOLOv3Layer<MatType>(mask, anchors);
+  }
 
   FFN<YoloV3TinyLoss<MatType>, RandomInitialization> model;
 

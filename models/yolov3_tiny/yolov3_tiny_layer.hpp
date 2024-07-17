@@ -77,12 +77,11 @@ class YOLOv3Layer : public Layer<MatType>
       size_t yChannel = xChannel + 1;
       for (size_t i = 0; i < width; i++) {
         for (size_t j = 0; j < height; j++) {
-          //give a number between 0-416
-          output(i * channels * width +  j * channels + widthChannel) = std::exp(input(i * channels * width +  j * channels + widthChannel)) * anchors[mask[n]];
-          output(i * channels * width + j * channels + heightChannel) = std::exp(input(i * channels * width + j * channels + heightChannel)) * anchors[mask[n]+1];
+          output(i * channels * width +  j * channels + widthChannel) = (std::exp(input(i * channels * width +  j * channels + widthChannel)) * anchors[mask[n]])/416;
+          output(i * channels * width + j * channels + heightChannel) = (std::exp(input(i * channels * width + j * channels + heightChannel)) * anchors[mask[n]+1])/416;
           //give a number between 0-13
-          output(i * channels * width +  j * channels +  xChannel) = output(i * channels * width + j * channels +  xChannel) + i;
-          output(i * channels * width +  j * channels + yChannel) = output(i * channels * width + j * channels + yChannel) + j;
+          output(i * channels * width +  j * channels +  xChannel) = (output(i * channels * width + j * channels +  xChannel) + i)/13;
+          output(i * channels * width +  j * channels + yChannel) = (output(i * channels * width + j * channels + yChannel) + j)/13;
         }
       }
     }

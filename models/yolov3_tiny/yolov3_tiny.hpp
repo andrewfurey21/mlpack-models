@@ -80,7 +80,7 @@ public:
 
     Concat* concatBlock = new Concat(2);
     concatBlock->Add(sequential);
-    //concatBlock->Add(layer8);
+    concatBlock->Add(layer8);
 
     small.template Add(concatBlock);//20
     small.template Add(ConvolutionalBlock(3, 256));//21

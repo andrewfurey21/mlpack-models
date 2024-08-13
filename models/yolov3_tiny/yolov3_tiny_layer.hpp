@@ -62,7 +62,7 @@ class YOLOv3Layer : public Layer<MatType>
    * @param input Input data used for evaluating the specified function.
    * @param output Resulting output activation.
    */
-  void Forward(const MatType& input, MatType& output) {
+  void Forward(const MatType& input, MatType& output) {//could do with a rewrite
     output = input;
     output.for_each([](arma::mat::elem_type& value) { value = 1.0f/(1.0f * std::exp(-value)); });
   

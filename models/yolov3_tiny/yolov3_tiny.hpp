@@ -2,7 +2,6 @@
 #define MODELS_MODELS_YOLOV3_TINY_YOLOV3_TINY_HPP
 
 #include <mlpack/methods/ann/init_rules/random_init.hpp>
-#include <mlpack/methods/ann/layer/add.hpp>
 #include <mlpack/methods/ann/layer/batch_norm.hpp>
 #include <mlpack/methods/ann/layer/convolution.hpp>
 #include <mlpack/methods/ann/layer/leaky_relu.hpp>
@@ -38,7 +37,7 @@ public:
 	batchSize(1)
   {
     large->InputDimensions() = std::vector<size_t>({inputWidth, inputHeight, inputChannels, batchSize});
-    //small.InputDimensions() = std::vector<size_t>({inputWidth, inputHeight, inputChannels, 1});
+    small->InputDimensions() = std::vector<size_t>({inputWidth, inputHeight, inputChannels, batchSize});
    
     large->template Add<Convolution>(16, 3, 3, 1, 1, 1, 1, "none", false);//0
     large->template Add<BatchNorm>();

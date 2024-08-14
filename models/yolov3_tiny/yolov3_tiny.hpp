@@ -33,10 +33,11 @@ public:
 	inputWidth(inputWidth),
 	inputHeight(inputHeight),
 	inputChannels(inputChannels),
-	numClasses(numClasses)
+	numClasses(numClasses),
+	batchSize(1)
   {
-    large->InputDimensions() = std::vector<size_t>({inputWidth, inputHeight, inputChannels, 1});
-    // small.InputDimensions() = std::vector<size_t>({inputWidth, inputHeight, inputChannels, 1});
+    large->InputDimensions() = std::vector<size_t>({inputWidth, inputHeight, inputChannels, batchSize});
+    //small.InputDimensions() = std::vector<size_t>({inputWidth, inputHeight, inputChannels, 1});
    
     large->template Add<Convolution>(16, 3, 3, 1, 1, 1, 1, "none", false);//0
     large->template Add<BatchNorm>();
@@ -91,15 +92,35 @@ public:
 
     large->template Add<YOLOv3Layer<MatType>>({3, 4, 5}, anchors);
 
-    // small.template Add(ConvolutionalBlock(3, 16));//0
-    // small.template Add(PoolingBlock(2, 2));//1
-    // small.template Add(ConvolutionalBlock(3, 32));//2
-    // small.template Add(PoolingBlock(2, 2));//3
-    // small.template Add(ConvolutionalBlock(3, 64));//4
-    // small.template Add(PoolingBlock(2, 2));//5
-    // small.template Add(ConvolutionalBlock(3, 128));//6
-    // small.template Add(PoolingBlock(2, 2));//7
+
+    // small->template Add<Convolution>(16, 3, 3, 1, 1, 1, 1, "none", false);//0
+    // small->template Add<BatchNorm>();
+    // small->template Add<LeakyReLU>(0.1f);
     //
+    // small->template Add<MaxPooling>(2, 2, 2, 2);//1
+    //
+    // small->template Add<Convolution>(32, 3, 3, 1, 1, 1, 1, "none", false);//2
+    // small->template Add<BatchNorm>();
+    // small->template Add<LeakyReLU>(0.1f);
+    //
+    // small->template Add<MaxPooling>(2, 2, 2, 2);//3
+    // 
+    // small->template Add<Convolution>(64, 3, 3, 1, 1, 1, 1, "none", false);//4
+    // small->template Add<BatchNorm>();
+    // small->template Add<LeakyReLU>(0.1f);
+    //
+    // small->template Add<MaxPooling>(2, 2, 2, 2);//5
+    //
+    // small->template Add<Convolution>(128, 3, 3, 1, 1, 1, 1, "none", false);//6
+    // small->template Add<BatchNorm>();
+    // small->template Add<LeakyReLU>(0.1f);
+    //
+    // small->template Add<MaxPooling>(2, 2, 2, 2);//7
+    // 
+    // small->template Add<Convolution>(256, 3, 3, 1, 1, 1, 1, "none", false);//8
+    // small->template Add<BatchNorm>();
+    // small->template Add<LeakyReLU>(0.1f);
+    // 
     // MultiLayer<MatType>* sequential = new MultiLayer<MatType>();
     // sequential->template Add(ConvolutionalBlock(3, 256));//8
     // sequential->template Add(PoolingBlock(2, 2));//9
@@ -109,24 +130,21 @@ public:
     // sequential->template Add(ConvolutionalBlock(1, 256, 1, 0));//13
     // sequential->template Add(ConvolutionalBlock(1, 128, 1, 0));//18
     // sequential->template Add(UpsampleBlock(2.0f));//19
-    //
+    // 
     // MultiLayer<MatType>* layer8= new MultiLayer<MatType>();
     // layer8->template Add(ConvolutionalBlock(3, 256));//8
-    //
+    // 
     // Concat* concatBlock = new Concat(2);
     // concatBlock->Add(sequential);
     // concatBlock->Add(layer8);
-    //
+    // 
     // small.template Add(concatBlock);//20
     // small.template Add(ConvolutionalBlock(3, 256));//21
     // small.template Add(ConvolutionalBlock(1, 255, 1, 0, false, false));//22
     // small.template Add(YOLOv3Block({0, 1, 2}));//23
-    //
-    // small.Reset();
-    // large.Reset();
   }
 
-  ~YoloV3Tiny() { delete large; }
+  ~YoloV3Tiny() { delete large; delete small; }
 
   void Predict(const MatType& predictors,
 	       MatType& results) {
@@ -150,14 +168,15 @@ private:
   }
 
   MultiLayer<MatType>* large = new MultiLayer<MatType>();
-  // MultiLayer<MatType>* small = new MultiLayer<MatType>();
+  MultiLayer<MatType>* small = new MultiLayer<MatType>();
 
-  YoloV3TinyLoss<MatType> outputLayer;
+  YoloV3TinyLoss<MatType> outputLayer;//for training only.
 
   size_t inputWidth;
   size_t inputHeight;
   size_t inputChannels;
   size_t numClasses;
+  size_t batchSize;
 
   std::vector<double> anchors;
 

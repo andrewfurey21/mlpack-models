@@ -90,18 +90,6 @@ class YOLOv3Layer : public Layer<MatType>
   }
 
   /**
-   * Calculate the gradient using the output and the input activation.
-   *
-   * @param * (input) The propagated input.
-   * @param error The calculated error.
-   * @param gradient The calculated gradient.
-   */
-  void Gradient(const MatType& /* input */,
-                const MatType& error,
-                MatType& gradient) {
-  }
-
-  /**
    * Serialize the layer.
    */
   template<typename Archive>

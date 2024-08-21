@@ -59,32 +59,20 @@ class YOLOv3Layer : public Layer<MatType>
   /**
    * Forward pass: squeeze (x, y), objectness and probabilities between 0 and 1
    *
-   * @param input Input data used for evaluating the specified function.
-   * @param output Resulting output activation.
+   * @param input
+   * @param output
    */
-  void Forward(const MatType& input, MatType& output) {//could do with a rewrite
-    output = input;
-    output.for_each([](arma::mat::elem_type& value) { value = 1.0f/(1.0f * std::exp(-value)); });
-  
-    size_t channels = this->InputDimensions()[2];
+  void Forward(const MatType& input, MatType& output) {
     size_t width = this->InputDimensions()[0];
     size_t height = this->InputDimensions()[1];
+    size_t channels = this->InputDimensions()[2];
+    size_t batchSize = this->InputDimensions()[3];
 
-    for (size_t n = 0; n < mask.size(); n++) {
-      size_t widthChannel = 2 + (channels / mask.size()) * n;
-      size_t heightChannel = widthChannel + 1;
-      size_t xChannel = (channels / mask.size()) * n;
-      size_t yChannel = xChannel + 1;
-      for (size_t i = 0; i < width; i++) {
-        for (size_t j = 0; j < height; j++) {
-          output(i * channels * width +  j * channels + widthChannel) = (std::exp(input(i * channels * width +  j * channels + widthChannel)) * anchors[mask[n]])/416;
-          output(i * channels * width + j * channels + heightChannel) = (std::exp(input(i * channels * width + j * channels + heightChannel)) * anchors[mask[n]+1])/416;
-          //give a number between 0-13
-          output(i * channels * width +  j * channels +  xChannel) = (output(i * channels * width + j * channels +  xChannel) + i)/13;
-          output(i * channels * width +  j * channels + yChannel) = (output(i * channels * width + j * channels + yChannel) + j)/13;
-        }
-      }
-    }
+    auto f = [](const arma::mat::elem_type& value) { return 1.0f/(1.0f * std::exp(-value));};
+
+    output = input;
+    output.submat(0, 0, width * height * 2 - 1, batchSize - 1).transform(f);//x, y
+    output.submat(width * height * 4, 0, output.n_rows - 1, batchSize - 1).transform(f);//obj, probs
   }
 
   /**
@@ -98,7 +86,8 @@ class YOLOv3Layer : public Layer<MatType>
   void Backward(const MatType& /* input */,
                 const MatType& /* output */,
                 const MatType& gy,
-                MatType& g) {}
+                MatType& g) {
+  }
 
   /**
    * Calculate the gradient using the output and the input activation.
@@ -109,7 +98,8 @@ class YOLOv3Layer : public Layer<MatType>
    */
   void Gradient(const MatType& /* input */,
                 const MatType& error,
-                MatType& gradient) {}
+                MatType& gradient) {
+  }
 
   /**
    * Serialize the layer.

@@ -11,12 +11,7 @@ template<typename MatType>
 class YOLOv3Layer : public Layer<MatType>
 {
  public:
-  YOLOv3Layer(std::vector<size_t> mask,
-              std::vector<double> anchors,
-              size_t classes = 80):
-    mask(mask),
-    anchors(anchors),
-    classes(classes)
+  YOLOv3Layer()
   {}
 
   //! Clone the YOLOv3Layer object. This handles polymorphism correctly.
@@ -27,22 +22,16 @@ class YOLOv3Layer : public Layer<MatType>
 
   //! Copy the given YOLOv3Layer layer.
   YOLOv3Layer(const YOLOv3Layer& other) :
-    Layer<MatType>(other),
-    mask(other.mask),
-    anchors(other.anchors)
+    Layer<MatType>(other)
   {}
   //! Take ownership of the given YOLOv3Layer layer.
   YOLOv3Layer(YOLOv3Layer&& other) :
-    Layer<MatType>(std::move(other)),
-    mask(std::move(other.mask)),
-    anchors(std::move(other.anchors))
+    Layer<MatType>(std::move(other))
   {}
   //! Copy the given YOLOv3Layer layer.
   YOLOv3Layer& operator=(const YOLOv3Layer& other) {
     if (&other != this) {
       Layer<MatType>::operator=(other);
-      mask = other.mask;
-      anchors = other.anchors;
     }
     return *this;
   }
@@ -50,8 +39,6 @@ class YOLOv3Layer : public Layer<MatType>
   YOLOv3Layer& operator=(YOLOv3Layer&& other) {
     if (&other != this) {
       Layer<MatType>::operator=(std::move(other));
-      mask = std::move(other.mask);
-      anchors = std::move(other.anchors);
     }
     return *this;
   }
@@ -76,7 +63,7 @@ class YOLOv3Layer : public Layer<MatType>
   }
 
   /**
-   * Backward pass: send weights backwards (the bias does not affect anything).
+   * Backward pass: send weights backwards
    *
    * @param input The input data (x) given to the forward pass.
    * @param output The propagated data (f(x)) resulting from Forward()
@@ -93,17 +80,7 @@ class YOLOv3Layer : public Layer<MatType>
    * Serialize the layer.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const uint32_t /* version */) {
-    ar(CEREAL_NVP(mask));
-    ar(CEREAL_NVP(anchors));
-    ar(CEREAL_NVP(classes));
-  }
-
- private:
-
-  std::vector<size_t> mask;
-  std::vector<double> anchors;
-  size_t classes;
+  void serialize(Archive& ar, const uint32_t /* version */) {}
 };
 
 } // namespace mlpack

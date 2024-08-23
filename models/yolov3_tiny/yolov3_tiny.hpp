@@ -27,13 +27,14 @@ public:
 	     const size_t inputWidth = 416,
 	     const size_t inputHeight = 416,
 	     const size_t inputChannels = 3,
-	     const size_t numClasses = 80
+	     const size_t numClasses = 80,
+	     const size_t batchSize = 1
 	     ) :
 	inputWidth(inputWidth),
 	inputHeight(inputHeight),
 	inputChannels(inputChannels),
 	numClasses(numClasses),
-	batchSize(1)
+	batchSize(batchSize)
   {
     large = new FFN<YoloV3TinyLoss<MatType>, RandomInitialization>();
     large->InputDimensions() = std::vector<size_t>({inputWidth, inputHeight, inputChannels, batchSize});
@@ -106,125 +107,156 @@ public:
     large->template Add<Convolution>(255, 1, 1, 1, 1, 0, 0, "none", true);//34
 
     //16
-    std::vector<size_t> largeMask = {3, 4, 5};
     large->template Add<YOLOv3Layer<MatType>>();//35
     large->Reset();
 
     // Upsampled detections
-    // small = new FFN...
-    //small->InputDimensions() = std::vector<size_t>({inputWidth, inputHeight, inputChannels, batchSize});
-   //  MultiLayer<MatType>* layer19 = new MultiLayer<MatType>();
-   //  layer19->template Add<Convolution>(16, 3, 3, 1, 1, 1, 1, "none", false);//0
-   //  layer19->template Add<BatchNorm>();
-   //  layer19->template Add<LeakyReLU>(0.1f);
-   //  
-   //  layer19->template Add<MaxPooling>(2, 2, 2, 2);//1
-   //  
-   //  layer19->template Add<Convolution>(32, 3, 3, 1, 1, 1, 1, "none", false);//2
-   //  layer19->template Add<BatchNorm>();
-   //  layer19->template Add<LeakyReLU>(0.1f);
-   // 
-   //  layer19->template Add<MaxPooling>(2, 2, 2, 2);//3
-   // 
-   //  layer19->template Add<Convolution>(64, 3, 3, 1, 1, 1, 1, "none", false);//4
-   //  layer19->template Add<BatchNorm>();
-   //  layer19->template Add<LeakyReLU>(0.1f);
-   // 
-   //  layer19->template Add<MaxPooling>(2, 2, 2, 2);//5
-   // 
-   //  layer19->template Add<Convolution>(128, 3, 3, 1, 1, 1, 1, "none", false);//6
-   //  layer19->template Add<BatchNorm>();
-   //  layer19->template Add<LeakyReLU>(0.1f);
-   // 
-   //  layer19->template Add<MaxPooling>(2, 2, 2, 2);//7
-   // 
-   //  layer19->template Add<Convolution>(256, 3, 3, 1, 1, 1, 1, "none", false);//8
-   //  layer19->template Add<BatchNorm>();
-   //  layer19->template Add<LeakyReLU>(0.1f);
-   //
-   //  layer19->template Add<MaxPooling>(2, 2, 2, 2);//9
-   //
-   //  layer19->template Add<Convolution>(512, 3, 3, 1, 1, 1, 1, "none", false);//10
-   //  layer19->template Add<BatchNorm>();
-   //  layer19->template Add<LeakyReLU>(0.1f);
-   //
-   //  layer19->template Add<Padding>(1, 0, 1, 0);
-   //  layer19->template Add<MaxPooling>(2, 2, 1, 1);//11
-   //
-   //  layer19->template Add<Convolution>(1024, 3, 3, 1, 1, 1, 1, "none", false);//12
-   //  layer19->template Add<BatchNorm>();
-   //  layer19->template Add<LeakyReLU>(0.1f);
-   //
-   //  layer19->template Add<Convolution>(256, 3, 3, 1, 1, 1, 1, "none", false);//13
-   //  layer19->template Add<BatchNorm>();
-   //  layer19->template Add<LeakyReLU>(0.1f);
-   //
-   //  layer19->template Add<Convolution>(128, 1, 1, 1, 1, 0, 0, "none", false);//18
-   //  layer19->template Add<BatchNorm>();
-   //  layer19->template Add<LeakyReLU>(0.1f);
-   //
-   //  std::vector<double> scaleFactors = {2.0f, 2.0f};
-   //  layer19->template Add<NearestInterpolation>(scaleFactors);
-   //  
-   //  //Layer8
-   //  MultiLayer<MatType>* layer8 = new MultiLayer<MatType>();
-   //  layer8->template Add<Convolution>(16, 3, 3, 1, 1, 1, 1, "none", false);//0
-   //  layer8->template Add<BatchNorm>();
-   //  layer8->template Add<LeakyReLU>(0.1f);
-   //  
-   //  layer8->template Add<MaxPooling>(2, 2, 2, 2);//1
-   //  
-   //  layer8->template Add<Convolution>(32, 3, 3, 1, 1, 1, 1, "none", false);//2
-   //  layer8->template Add<BatchNorm>();
-   //  layer8->template Add<LeakyReLU>(0.1f);
-   // 
-   //  layer8->template Add<MaxPooling>(2, 2, 2, 2);//3
-   // 
-   //  layer8->template Add<Convolution>(64, 3, 3, 1, 1, 1, 1, "none", false);//4
-   //  layer8->template Add<BatchNorm>();
-   //  layer8->template Add<LeakyReLU>(0.1f);
-   // 
-   //  layer8->template Add<MaxPooling>(2, 2, 2, 2);//5
-   // 
-   //  layer8->template Add<Convolution>(128, 3, 3, 1, 1, 1, 1, "none", false);//6
-   //  layer8->template Add<BatchNorm>();
-   //  layer8->template Add<LeakyReLU>(0.1f);
-   // 
-   //  layer8->template Add<MaxPooling>(2, 2, 2, 2);//7
-   // 
-   //  layer8->template Add<Convolution>(256, 3, 3, 1, 1, 1, 1, "none", false);//8
-   //  layer8->template Add<BatchNorm>();
-   //  layer8->template Add<LeakyReLU>(0.1f);
-   //
-   //  ConcatType<MatType>* layer20 = new ConcatType<MatType>(2);
-   //  layer20->template Add(layer19);
-   //  layer20->template Add(layer8);
-   //
-   //  small->template Add(layer20);
-   //
-   //  small->template Add<Convolution>(256, 3, 3, 1, 1, 1, 1, "none", false);//21
-   //  small->template Add<BatchNorm>();
-   //  small->template Add<LeakyReLU>(0.1f);
-   //
-   //  small->template Add<Convolution>(255, 1, 1, 1, 1, 0, 0, "none", true);//22
-   //
-   //  std::vector<size_t> smallMask = {0, 1, 2};
-   //  small->template Add<YOLOv3Layer<MatType>>();
-   //
-   //  small->Reset();
+    small = new FFN<YoloV3TinyLoss<MatType>, RandomInitialization>();
+    small->InputDimensions() = std::vector<size_t>({inputWidth, inputHeight, inputChannels, batchSize});
+
+    MultiLayer<MatType>* layer19 = new MultiLayer<MatType>();
+
+    //0
+    layer19->template Add<Convolution>(16, 3, 3, 1, 1, 1, 1, "none", false);//0
+    layer19->template Add<BatchNorm>();//1
+    layer19->template Add<LeakyReLU>(0.1f);//2
+   
+    //1
+    layer19->template Add<MaxPooling>(2, 2, 2, 2);//3
+   
+    //2
+    layer19->template Add<Convolution>(32, 3, 3, 1, 1, 1, 1, "none", false);//3
+    layer19->template Add<BatchNorm>();//4
+    layer19->template Add<LeakyReLU>(0.1f);//5
+
+    //3
+    layer19->template Add<MaxPooling>(2, 2, 2, 2);//6
+
+    //4
+    layer19->template Add<Convolution>(64, 3, 3, 1, 1, 1, 1, "none", false);//7
+    layer19->template Add<BatchNorm>();//8
+    layer19->template Add<LeakyReLU>(0.1f);//9
+
+    //5
+    layer19->template Add<MaxPooling>(2, 2, 2, 2);//10
+
+    //6
+    layer19->template Add<Convolution>(128, 3, 3, 1, 1, 1, 1, "none", false);//11
+    layer19->template Add<BatchNorm>();//12
+    layer19->template Add<LeakyReLU>(0.1f);//13
+
+    //7
+    layer19->template Add<MaxPooling>(2, 2, 2, 2);//14
+
+    //8
+    layer19->template Add<Convolution>(256, 3, 3, 1, 1, 1, 1, "none", false);//15
+    layer19->template Add<BatchNorm>();//16
+    layer19->template Add<LeakyReLU>(0.1f);//17
+
+    //9
+    layer19->template Add<MaxPooling>(2, 2, 2, 2);//18
+
+    //10
+    layer19->template Add<Convolution>(512, 3, 3, 1, 1, 1, 1, "none", false);//19
+    layer19->template Add<BatchNorm>();//20
+    layer19->template Add<LeakyReLU>(0.1f);//21
+
+    //11
+    layer19->template Add<Padding>(1, 0, 1, 0);//22
+    layer19->template Add<MaxPooling>(2, 2, 1, 1);//23
+
+    //12
+    layer19->template Add<Convolution>(1024, 3, 3, 1, 1, 1, 1, "none", false);//24
+    layer19->template Add<BatchNorm>();//25
+    layer19->template Add<LeakyReLU>(0.1f);//26
+
+    //13
+    layer19->template Add<Convolution>(256, 3, 3, 1, 1, 1, 1, "none", false);//27
+    layer19->template Add<BatchNorm>();//28
+    layer19->template Add<LeakyReLU>(0.1f);//29
+
+    //18
+    layer19->template Add<Convolution>(128, 1, 1, 1, 1, 0, 0, "none", false);//30
+    layer19->template Add<BatchNorm>();//31
+    layer19->template Add<LeakyReLU>(0.1f);//32
+
+    //19
+    std::vector<double> scaleFactors = {2.0f, 2.0f};
+    layer19->template Add<NearestInterpolation>(scaleFactors);
+    
+    //Layer8
+    MultiLayer<MatType>* layer8 = new MultiLayer<MatType>();
+    //0
+    layer8->template Add<Convolution>(16, 3, 3, 1, 1, 1, 1, "none", false);//0
+    layer8->template Add<BatchNorm>();//1
+    layer8->template Add<LeakyReLU>(0.1f);//2
+   
+    //1
+    layer8->template Add<MaxPooling>(2, 2, 2, 2);//3
+   
+    //2
+    layer8->template Add<Convolution>(32, 3, 3, 1, 1, 1, 1, "none", false);//3
+    layer8->template Add<BatchNorm>();//4
+    layer8->template Add<LeakyReLU>(0.1f);//5
+
+    //3
+    layer8->template Add<MaxPooling>(2, 2, 2, 2);//6
+
+    //4
+    layer8->template Add<Convolution>(64, 3, 3, 1, 1, 1, 1, "none", false);//7
+    layer8->template Add<BatchNorm>();//8
+    layer8->template Add<LeakyReLU>(0.1f);//9
+
+    //5
+    layer8->template Add<MaxPooling>(2, 2, 2, 2);//10
+
+    //6
+    layer8->template Add<Convolution>(128, 3, 3, 1, 1, 1, 1, "none", false);//11
+    layer8->template Add<BatchNorm>();//12
+    layer8->template Add<LeakyReLU>(0.1f);//13
+
+    //7
+    layer8->template Add<MaxPooling>(2, 2, 2, 2);//14
+
+    //8
+    layer8->template Add<Convolution>(256, 3, 3, 1, 1, 1, 1, "none", false);//15
+    layer8->template Add<BatchNorm>();//16
+    layer8->template Add<LeakyReLU>(0.1f);//17
+
+    ConcatType<MatType>* layer20 = new ConcatType<MatType>(2);
+    layer20->template Add(layer19);
+    layer20->template Add(layer8);
+
+    small->template Add(layer20);
+
+    small->template Add<Convolution>(256, 3, 3, 1, 1, 1, 1, "none", false);//21
+    small->template Add<BatchNorm>();
+    small->template Add<LeakyReLU>(0.1f);
+
+    small->template Add<Convolution>(255, 1, 1, 1, 1, 0, 0, "none", true);//22
+
+    small->template Add<YOLOv3Layer<MatType>>();
+    small->Reset();
   }
 
   ~YoloV3Tiny() { };
 
   void Predict(const MatType& predictors,
-	       MatType& results) {
-    large->Predict(predictors, results);
+	       MatType& largeObjects,
+	       MatType& smallObjects) {
+    large->Predict(predictors, largeObjects);
+    small->Predict(predictors, smallObjects);
   }
 
   void printModel() {
     printf("Large object detections:\n");
     for (size_t i = 0; i < large->Network().size(); i++) {
       auto layer = large->Network()[i];
+      printLayer(layer, i);
+    }
+    printf("Small object detections:\n");
+    for (size_t i = 0; i < small->Network().size(); i++) {
+      auto layer = small->Network()[i];
       printLayer(layer, i);
     }
   }

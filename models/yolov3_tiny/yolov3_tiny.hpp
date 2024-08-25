@@ -114,7 +114,7 @@ public:
     large->Reset();
 
     // Upsampled detections
-    small = new FFN<YoloV3TinyLoss<MatType>, RandomInitialization>();
+    small = new FFN<YoloV3TinyLoss<MatType>, RandomInitialization>(YoloV3TinyLoss<MatType>(26, 26));
     small->InputDimensions() = std::vector<size_t>({inputWidth, inputHeight, inputChannels, batchSize});
 
     MultiLayer<MatType>* layer19 = new MultiLayer<MatType>();
@@ -273,7 +273,8 @@ private:
   FFN<YoloV3TinyLoss<MatType>, RandomInitialization>* large;
   FFN<YoloV3TinyLoss<MatType>, RandomInitialization>* small;
 
-  YoloV3TinyLoss<MatType> outputLayer;//for training only.
+  YoloV3TinyLoss<MatType> largeLoss;//13x13
+  YoloV3TinyLoss<MatType> smallLoss;//26x26
 
   size_t inputWidth;
   size_t inputHeight;

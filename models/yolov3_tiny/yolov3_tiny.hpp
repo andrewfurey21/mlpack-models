@@ -24,12 +24,14 @@ template<typename MatType>
 class YoloV3Tiny {
 public:
   YoloV3Tiny(
+	     const std::vector<std::pair<size_t, size_t>> anchors,
 	     const size_t inputWidth = 416,
 	     const size_t inputHeight = 416,
 	     const size_t inputChannels = 3,
 	     const size_t numClasses = 80,
 	     const size_t batchSize = 1
 	     ) :
+	anchors(anchors),
 	inputWidth(inputWidth),
 	inputHeight(inputHeight),
 	inputChannels(inputChannels),
@@ -107,7 +109,8 @@ public:
     large->template Add<Convolution>(255, 1, 1, 1, 1, 0, 0, "none", true);//34
 
     //16
-    large->template Add<YOLOv3Layer<MatType>>();//35
+    std::vector<std::pair<size_t, size_t>> largeAnchors = std::vector<std::pair<size_t, size_t>>(anchors.begin()+3, anchors.end());
+    large->template Add<YOLOv3Layer<MatType>>(largeAnchors);//35
     large->Reset();
 
     // Upsampled detections
@@ -223,19 +226,23 @@ public:
     layer8->template Add<BatchNorm>();//16
     layer8->template Add<LeakyReLU>(0.1f);//17
 
+    //20
     ConcatType<MatType>* layer20 = new ConcatType<MatType>(2);
     layer20->template Add(layer19);
     layer20->template Add(layer8);
-
     small->template Add(layer20);
 
-    small->template Add<Convolution>(256, 3, 3, 1, 1, 1, 1, "none", false);//21
+    //21
+    small->template Add<Convolution>(256, 3, 3, 1, 1, 1, 1, "none", false);
     small->template Add<BatchNorm>();
     small->template Add<LeakyReLU>(0.1f);
 
-    small->template Add<Convolution>(255, 1, 1, 1, 1, 0, 0, "none", true);//22
+    //22
+    small->template Add<Convolution>(255, 1, 1, 1, 1, 0, 0, "none", true);
 
-    small->template Add<YOLOv3Layer<MatType>>();
+    //23
+    std::vector<std::pair<size_t, size_t>> smallAnchors = std::vector<std::pair<size_t, size_t>>(anchors.begin(), anchors.begin()+3);
+    small->template Add<YOLOv3Layer<MatType>>(smallAnchors);
     small->Reset();
   }
 
@@ -262,12 +269,6 @@ public:
   }
 
 private:
-  MultiLayer<MatType>* UpsampleBlock(const double scaleFactor) {
-    MultiLayer<MatType>* upsampleBlock = new MultiLayer<MatType>();
-    std::vector<double> scaleFactors = {scaleFactor, scaleFactor};
-    upsampleBlock->template Add<NearestInterpolation>(scaleFactors);
-    return upsampleBlock;
-  }
   
   FFN<YoloV3TinyLoss<MatType>, RandomInitialization>* large;
   FFN<YoloV3TinyLoss<MatType>, RandomInitialization>* small;
@@ -287,6 +288,8 @@ private:
     int batch = layer->OutputDimensions()[3];
     printf("Layer %2d output shape:  %3d x %3d x %4d x %3d\n", (int)layerIndex, width, height, channels, batch);
   }
+
+  std::vector<std::pair<size_t, size_t>> anchors;
 };
 
 } // namespace models

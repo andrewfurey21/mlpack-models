@@ -9,24 +9,19 @@ template<typename MatType = arma::mat>
 class YoloV3TinyLoss
 {
  public:
-  YoloV3TinyLoss(size_t width,
-                 size_t height,
+  YoloV3TinyLoss(size_t width = 13,
+                 size_t height = 13,
                  double confidence = 0.5, 
                  double localizaiton = 0.9, 
                  double classifcation = 0.6,
                  size_t classes = 80) :
-                                    confidence(confidence),
-                                    localization(localization),
-                                    classification(classification),
-                                    width(width),
-                                    height(height),
-                                    classes(classes)
+    width(width),
+    height(height),
+    confidence(confidence),
+    localization(localization),
+    classification(classification),
+    classes(classes)
                                     {}
-
-  // L(YOLO) = a1 * L(confidence) + a2 * L(localization) + a3 * L(classification)
-  // L(confidence) = binary cross entropy
-  // L(localization) = mse
-  // L(classification) = multi class cross entropy
 
   typename MatType::elem_type Forward(const MatType& prediction,
                                       const MatType& target) {
@@ -63,7 +58,11 @@ class YoloV3TinyLoss
   }
 
   template<typename Archive>
-  void serialize(Archive& ar, const uint32_t /* version */) {}
+  void serialize(Archive& ar, const uint32_t /* version */) {
+    ar(CEREAL_NVP(width));
+    ar(CEREAL_NVP(height));
+    ar(CEREAL_NVP(classes));
+  }
 
  private:
   double classification;
@@ -74,9 +73,9 @@ class YoloV3TinyLoss
   MeanSquaredErrorType<> localizationLossFn;
   MultiLabelSoftMarginLossType<> classificationLossFn;
 
+  size_t classes;
   size_t width;
   size_t height;
-  size_t classes;
 };
 
 

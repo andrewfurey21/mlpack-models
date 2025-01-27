@@ -79,22 +79,15 @@ class YOLOv3Layer : public Layer<MatType>
     size_t batchSize = this->InputDimensions()[3];
 
     auto f = [](const arma::mat::elem_type& value) { 
-      return 1.0f/(1.0f * std::exp(-value));
+      return 1.0f/(1.0f + std::exp(-value));
     };
 
     output = input;
     output.submat(0, 0, width * height * 2 - 1, batchSize - 1).transform(f);//x, y
     output.submat(width * height * 4, 0, output.n_rows - 1, batchSize - 1).transform(f);//obj, probs
-
-    // for (size_t mask = 0; mask < anchors.size(); mask++) {
-    //   size_t anchorWidth = anchors[mask].first;
-    //   size_t anchorHeight = anchors[mask].second;
-    //   
-    //   auto x = [](const arma::mat::elem_type& value) {
-    //     
-    //   };
-    //   
-    // }
+    // TODO: transform w and h.
+    // w = anchor_box_w * exp(w)
+    // h = anchor_box_h * exp(h)
   }
 
   /**
@@ -110,10 +103,6 @@ class YOLOv3Layer : public Layer<MatType>
                 const MatType& gy,
                 MatType& g) {
 
-    // auto f = [](const arma::mat::elem_type& value) { return 1.0f/(1.0f * std::exp(-value));};
-    // auto df = [=](const arma::mat::elem_type& value) {
-    //   return f(value) * (1 - f(value));
-    // };
   }
 
   /**
